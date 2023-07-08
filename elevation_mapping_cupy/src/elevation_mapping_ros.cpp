@@ -176,7 +176,7 @@ void ElevationMappingNode::setupMapPublishers() {
         publishMapOfIndex(i);
       }
     };
-    double duration = 1.0 / (fps + 0.00001);
+    double duration = 1.0 / (fps + 1);
     mapTimers_.push_back(nh_.createTimer(ros::Duration(duration), cb));
   }
 }
@@ -186,6 +186,8 @@ void ElevationMappingNode::publishMapOfIndex(int index) {
   if (!isGridmapUpdated_) {
     return;
   }
+  ros::Time start = ros::Time::now();
+
   grid_map_msgs::GridMap msg;
   std::vector<std::string> layers;
 
@@ -207,13 +209,58 @@ void ElevationMappingNode::publishMapOfIndex(int index) {
     if (layers.empty()) {
       return;
     }
-
     grid_map::GridMapRosConverter::toMessage(gridMap_, layers, msg);
   }
-
+  float dt = (ros::Time::now() - start).toSec();
+  // ROS_INFO("dt: %f", dt);
   msg.basic_layers = map_basic_layers_[index];
   mapPubs_[index].publish(msg);
 }
+
+void ElevationMappingNode::removePointsOutsideLimits(pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud) 
+{
+  pcl::PassThrough<pcl::PointXYZ> passThroughFilter(true);
+  passThroughFilter.setInputCloud(pointCloud);
+  passThroughFilter.setFilterFieldName("z");  // TODO(max): Should this be configurable?
+  double relativeLowerThreshold = 0.3;
+  double relativeUpperThreshold = 5.0;
+  passThroughFilter.setFilterLimits(relativeLowerThreshold, relativeUpperThreshold);
+  pcl::IndicesPtr insideIndeces(new std::vector<int>);
+  passThroughFilter.filter(*insideIndeces);
+
+  pcl::PassThrough<pcl::PointXYZ> passThroughFilter_depth(true);
+  passThroughFilter_depth.setInputCloud(pointCloud);
+  passThroughFilter_depth.setFilterFieldName("y");  // TODO(max): Should this be configurable?
+  double relativeMinThreshold = -0.5f;//parameters.sensorParameters_[""];
+  double relativeMaxThreshold = 2.0f;//parameters.ignorePointsUpperThreshold_;
+  passThroughFilter_depth.setFilterLimits(relativeMinThreshold, relativeMaxThreshold);
+  pcl::IndicesPtr insideIndeces_depth(new std::vector<int>);
+  passThroughFilter_depth.filter(*insideIndeces_depth);
+
+  pcl::ExtractIndices<pcl::PointXYZ> extractIndicesFilter, extractIndicesFilter_depth;
+  extractIndicesFilter.setInputCloud(pointCloud);
+  extractIndicesFilter.setIndices(insideIndeces);
+  pcl::PointCloud<pcl::PointXYZ> tempPointCloud;
+  extractIndicesFilter.filter(tempPointCloud);
+  pointCloud->swap(tempPointCloud);
+
+  extractIndicesFilter_depth.setInputCloud(pointCloud);
+  extractIndicesFilter_depth.setIndices(insideIndeces);
+  pcl::PointCloud<pcl::PointXYZ> tempPointCloud_depth;
+  extractIndicesFilter_depth.filter(tempPointCloud_depth);
+  pointCloud->swap(tempPointCloud_depth);
+
+  // Reduce points using VoxelGrid filter.
+  pcl::VoxelGrid<pcl::PointXYZ> voxelGridFilter;
+  voxelGridFilter.setInputCloud(pointCloud);
+  double filter_size = 0.1;
+  voxelGridFilter.setLeafSize(filter_size, filter_size, filter_size);
+  voxelGridFilter.filter(tempPointCloud);
+  pointCloud->swap(tempPointCloud);
+
+  ROS_INFO("removePointsOutsideLimits() reduced point cloud to %i points.", (int)pointCloud->size());
+}
+
 
 void ElevationMappingNode::pointcloudCallback(const sensor_msgs::PointCloud2& cloud) {
   auto start = ros::Time::now();
@@ -222,6 +269,9 @@ void ElevationMappingNode::pointcloudCallback(const sensor_msgs::PointCloud2& cl
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromPCLPointCloud2(pcl_pc, *pointCloud);
+
+  removePointsOutsideLimits(pointCloud);
+
   tf::StampedTransform transformTf;
   std::string sensorFrameId = cloud.header.frame_id;
   auto timeStamp = cloud.header.stamp;

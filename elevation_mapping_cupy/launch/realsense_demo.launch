@@ -1,0 +1,21 @@
+<launch>
+
+  <!-- Elevation mapping node -->
+  <node pkg="elevation_mapping" type="elevation_mapping" name="elevation_mapping" output="screen">
+    <rosparam command="load" file="$(find elevation_mapping_demos)/config/robots/simple_demo_robot.yaml" />
+    <!-- <rosparam command="load" file="$(find elevation_mapping_demos)/config/elevation_maps/remove_object.yaml" /> -->
+    <rosparam command="load" file="$(find elevation_mapping)/config/sensor_processors/realsense_d435.yaml" />
+    <!-- <rosparam command="load" file="$(find elevation_mapping_demos)/config/postprocessing/postprocessor_pipeline.yaml" /> -->
+  </node>
+
+  <include file="$(find elevation_mapping_demos)/launch/depth_to_pcl.launch"/>
+  <node pkg="elevation_mapping_demos" type="pose_to_tf.py" name = "transformer" output = "screen"/>
+
+  <!-- Launch visualizations for the resulting elevation map -->
+  <!-- <include file="$(find elevation_mapping_demos)/launch/visualization.launch" /> -->
+
+  <!-- <node pkg="tf" type="static_transform_publisher" name="camera_to_base" args="0.15 0 0.05 0 0 0 camera_depth_frame base 100" /> -->
+  <!-- Launch RViz with the demo configuration -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find elevation_mapping_demos)/rviz/elevation_map_visualization_pointcloud.rviz" />
+
+</launch>

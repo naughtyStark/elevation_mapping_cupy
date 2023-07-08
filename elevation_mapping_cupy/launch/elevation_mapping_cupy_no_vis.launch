@@ -11,11 +11,5 @@
   <node pkg="grid_map_occlusion_inpainting_ros" type="node" name="grid_map_occlusion_inpainting" output="screen" launch-prefix="">
       <rosparam file="$(find grid_map_occlusion_inpainting_ros)/config/default.yaml" />
   </node>
-
-  <node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen">
-    <rosparam command="load" file="$(find grid_map_occlusion_inpainting_ros)/config/viz.yaml" />
-  </node>
-  <node name="rviz" pkg="rviz" type="rviz"  args="-d $(find grid_map_occlusion_inpainting_ros)/rviz/occlusion_inpainting.rviz"/>
-
   
 </launch>

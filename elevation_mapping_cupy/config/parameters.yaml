@@ -1,9 +1,9 @@
 #### Basic parameters ########
-resolution: 0.04                                # resolution in m.
-map_length: 8                                  # map's size in m.
-sensor_noise_factor: 0.05                       # point's noise is sensor_noise_factor*z^2 (z is distance from sensor).
-mahalanobis_thresh: 2.0                         # points outside this distance is outlier.
-outlier_variance: 0.01                          # if point is outlier, add this value to the cell.
+resolution: 0.25                                # resolution in m.
+map_length: 16                                 # map's size in m.
+sensor_noise_factor: 1.0                       # point's noise is sensor_noise_factor*z^2 (z is distance from sensor).
+mahalanobis_thresh: 0.5                         # points outside this distance is outlier.
+outlier_variance: 0.05                          # if point is outlier, add this value to the cell.
 drift_compensation_variance_inler: 0.05         # cells under this value is used for drift compensation.
 max_drift: 0.1                                  # drift compensation happens only the drift is smaller than this value (for safety)
 drift_compensation_alpha: 0.1                   # drift compensation alpha for smoother update of drift compensation
@@ -14,19 +14,19 @@ traversability_inlier: 0.9                      # cells with higher traversabili
 dilation_size: 3                                # dilation filter size before traversability filter.
 wall_num_thresh: 20                             # if there are more points than this value, only higher points than the current height are used to make the wall more sharp.
 min_height_drift_cnt: 100                       # drift compensation only happens if the valid cells are more than this number.
-position_noise_thresh: 0.01                     # if the position change is bigger than this value, the drift compensation happens.
-orientation_noise_thresh: 0.01                  # if the orientation change is bigger than this value, the drift compensation happens.
+position_noise_thresh: 0.1                     # if the position change is bigger than this value, the drift compensation happens.
+orientation_noise_thresh: 0.1                  # if the orientation change is bigger than this value, the drift compensation happens.
 position_lowpass_alpha: 0.2                     # lowpass filter alpha used for detecting movements.
 orientation_lowpass_alpha: 0.2                  # lowpass filter alpha used for detecting movements.
-min_valid_distance: 0.5                         # points with shorter distance will be filtered out.
-max_height_range: 1.0                           # points higher than this value from sensor will be filtered out to disable ceiling.
+min_valid_distance: 0.1                         # points with shorter distance will be filtered out.
+max_height_range: 3.0                           # points higher than this value from sensor will be filtered out to disable ceiling.
 ramped_height_range_a: 0.3                      # if z > max(d - ramped_height_range_b, 0) * ramped_height_range_a + ramped_height_range_c, reject.
 ramped_height_range_b: 1.0                      # if z > max(d - ramped_height_range_b, 0) * ramped_height_range_a + ramped_height_range_c, reject.
 ramped_height_range_c: 0.2                      # if z > max(d - ramped_height_range_b, 0) * ramped_height_range_a + ramped_height_range_c, reject.
-update_variance_fps: 5.0                        # fps for updating variance.
-update_pose_fps: 10.0                           # fps for updating pose and shift the center of map.
+update_variance_fps: 50.0                        # fps for updating variance.
+update_pose_fps: 50.0                           # fps for updating pose and shift the center of map.
 time_interval: 0.1                              # Time layer is updated with this interval.
-map_acquire_fps: 5.0                            # Raw map is fetched from GPU memory in this fps.
+map_acquire_fps: 50.0                            # Raw map is fetched from GPU memory in this fps.
 publish_statistics_fps: 1.0                     # Publish statistics topic in this fps.
 
 max_ray_length: 10.0                            # maximum length for ray tracing.
@@ -40,18 +40,18 @@ max_unsafe_n: 10                                # if the number of cells under s
 overlap_clear_range_xy: 4.0                     # xy range [m] for clearing overlapped area. this defines the valid area for overlap clearance. (used for multi floor setting)
 overlap_clear_range_z: 2.0                      # z range [m] for clearing overlapped area. cells outside this range will be cleared. (used for multi floor setting)
 
-map_frame: 'odom'                               # The map frame where the odometry source uses.
-base_frame: 'base'                              # The robot's base frame. This frame will be a center of the map.
-corrected_map_frame: 'corrected_odom'
+map_frame: 'map'                               # The map frame where the odometry source uses.
+base_frame: 'base_link'                              # The robot's base frame. This frame will be a center of the map.
+corrected_map_frame: 'map'
 
 #### Feature toggles ########
 enable_edge_sharpen: true
-enable_visibility_cleanup: true
-enable_drift_compensation: true
+enable_visibility_cleanup: false
+enable_drift_compensation: false
 enable_overlap_clearance: true
 enable_pointcloud_publishing: false
 enable_drift_corrected_TF_publishing: false
-enable_normal_color: false                      # If true, the map contains 'color' layer corresponding to normal. Add 'color' layer to the publishers setting if you want to visualize.
+enable_normal_color: false                     # If true, the map contains 'color' layer corresponding to normal. Add 'color' layer to the publishers setting if you want to visualize.
 
 #### Traversability filter ########
 use_chainer: false                              # Use chainer as a backend of traversability filter or pytorch. If false, it uses pytorch. pytorch requires ~2GB more GPU memory compared to chainer but runs faster.
@@ -64,13 +64,14 @@ use_only_above_for_upper_bound: false
 plugin_config_file: '$(rospack find elevation_mapping_cupy)/config/plugin_config.yaml'
 
 #### Subscribers ########
-pointcloud_topics: ['/depth_camera_front/depth/color/points',
-                    '/depth_camera_rear/depth/color/points',
-                    '/depth_camera_left/depth/color/points',
-                    '/depth_camera_right/depth/color/points',
-                    '/robot_self_filter/bpearl_front/point_cloud',
-                    '/robot_self_filter/bpearl_rear/point_cloud'
-                    ]
+# pointcloud_topics: ['/depth_camera_front/depth/color/points',
+#                     '/depth_camera_rear/depth/color/points',
+#                     '/depth_camera_left/depth/color/points',
+#                     '/depth_camera_right/depth/color/points',
+#                     '/robot_self_filter/bpearl_front/point_cloud',
+#                     '/robot_self_filter/bpearl_rear/point_cloud'
+#                     ]
+pointcloud_topics: ['/points']
 
 #### Publishers ########
 # topic_name:
@@ -79,22 +80,103 @@ pointcloud_topics: ['/depth_camera_front/depth/color/points',
 #   fps:                  # Publish rate. Use smaller value than `map_acquire_fps`.
 publishers:
   elevation_map_raw:
-    layers: ['elevation', 'traversability', 'variance']
-    basic_layers: ['elevation', 'traversability']
-    fps: 5.0
-  elevation_map_recordable:
-    layers: ['elevation', 'traversability']
-    basic_layers: ['elevation', 'traversability']
-    fps: 2.0
-  elevation_map_filter:
-    layers: ['min_filter', 'smooth', 'inpaint', 'upper_bound']
-    basic_layers: ['min_filter']
-    fps: 3.0
+    layers: ['elevation', 'variance']
+    basic_layers: ['elevation']
+    fps: 30.0
+  # elevation_map_recordable:
+  #   layers: ['elevation', 'traversability']
+  #   basic_layers: ['elevation', 'traversability']
+  #   fps: 2.0
+  # heckin slow. parallelize:
+  # elevation_map_filter:
+  #   layers: ['min_filter', 'smooth', 'inpaint', 'upper_bound']
+  #   basic_layers: ['inpaint']
+  #   fps: 30.0
 
 #### Initializer ########
-initialize_method: 'linear'                                         # Choose one from 'nearest', 'linear', 'cubic'
-initialize_frame_id: ['RF_FOOT', 'LF_FOOT', 'RH_FOOT', 'LH_FOOT']   # One tf (like ['footprint'] ) initializes a square around it.
-initialize_tf_offset: [0.0, 0.0, 0.0, 0.0]                          # z direction. Should be same number as initialize_frame_id.
-dilation_size_initialize: 5                                         # dilation size after the init.
-initialize_tf_grid_size: 0.4                                        # This is not used if number of tf is more than 3.
-use_initializer_at_start: true                                      # Use initializer when the node starts.
+# initialize_method: 'linear'                                         # Choose one from 'nearest', 'linear', 'cubic'
+# initialize_frame_id: ['RF_FOOT', 'LF_FOOT', 'RH_FOOT', 'LH_FOOT']   # One tf (like ['footprint'] ) initializes a square around it.
+# initialize_tf_offset: [0.0, 0.0, 0.0, 0.0]                          # z direction. Should be same number as initialize_frame_id.
+# dilation_size_initialize: 5                                         # dilation size after the init.
+# initialize_tf_grid_size: 0.4                                        # This is not used if number of tf is more than 3.
+# use_initializer_at_start: true                                      # Use initializer when the node starts.
+
+
+# grid_map_filters:
+#   # Compute surface normals.
+#   - name: surface_normals
+#     type: gridMapFilters/NormalVectorsFilter
+#     params:
+#       input_layer: elevation
+#       output_layers_prefix: normal_vectors_
+#       radius: 0.2
+#       normal_vector_positive_axis: z
+
+  # Add a color layer for visualization based on the surface normal.
+  # - name: normal_color_map
+  #   type: gridMapFilters/NormalColorMapFilter
+  #   params:
+  #     input_layers_prefix: normal_vectors_
+  #     output_layer: normal_color
+
+  # # Compute slope from surface normal.
+  # - name: slope
+  #   type: gridMapFilters/MathExpressionFilter
+  #   params:
+  #     output_layer: slope
+  #     expression: acos(normal_vectors_z)
+
+  # # Compute roughness as absolute difference from map to smoothened map.
+  # - name: roughness
+  #   type: gridMapFilters/MathExpressionFilter
+  #   params:
+  #     output_layer: roughness
+  #     expression: abs(elevation_inpainted - elevation_smooth)
+
+  # Edge detection by computing the standard deviation from slope.
+  # - name: edge_detection
+  #   type: gridMapFilters/SlidingWindowMathExpressionFilter
+  #   params:
+  #     input_layer: slope
+  #     output_layer: edges
+  #     expression: sqrt(sumOfFinites(square(slope - meanOfFinites(slope))) ./ numberOfFinites(slope)) # Standard deviation
+  #     compute_empty_cells: false
+  #     edge_handling: crop # options: inside, crop, empty, mean
+  #     window_length: 0.05
+
+  # # Edge detection on elevation layer with convolution filter as alternative to filter above.
+  # - name: edge_detection
+  #   type: gridMapFilters/SlidingWindowMathExpressionFilter
+  #   params:
+  #     input_layer: elevation_inpainted
+  #     output_layer: edges
+  #     expression: 'sumOfFinites([0,1,0;1,-4,1;0,1,0].*elevation_inpainted)' # Edge detection.
+  #     # expression: 'sumOfFinites([0,-1,0;-1,5,-1;0,-1,0].*elevation_inpainted)' # Sharpen.
+  #     compute_empty_cells: false
+  #     edge_handling: mean # options: inside, crop, empty, mean
+  #     window_size: 3 # Make sure to make this compatible with the kernel matrix.
+
+  # Compute traversability as normalized weighted sum of slope and roughness.
+  # - name: traversability
+  #   type: gridMapFilters/MathExpressionFilter
+  #   params:
+  #     output_layer: traversability
+  #     expression: 0.5 * (1.0 - (slope / 0.6)) + 0.5 * (1.0 - (roughness / 0.1))
+
+  # Set lower threshold on traversability.
+  # - name: traversability_lower_threshold
+  #   type: gridMapFilters/ThresholdFilter
+  #   params:
+  #     condition_layer: traversability
+  #     output_layer: traversability
+  #     lower_threshold: 0.0
+  #     set_to: 0.0
+
+  # Set upper threshold on traversability.
+  # - name: traversability_upper_threshold
+  #   type: gridMapFilters/ThresholdFilter
+  #   params:
+  #     condition_layer: traversability
+  #     output_layer: traversability
+  #     upper_threshold: 1.0
+  #     set_to: 1.0 # Other uses: .nan, .inf

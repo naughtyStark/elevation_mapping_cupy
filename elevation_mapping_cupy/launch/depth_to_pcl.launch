@@ -1,0 +1,24 @@
+<launch>
+
+    <node pkg="nodelet" type="nodelet" args="manager" name="standalone_nodelet" output="screen"/>
+
+
+    <node pkg="nodelet" type="nodelet" name="depth_image_proc" args="load depth_image_proc/point_cloud_xyz standalone_nodelet --no-bond">
+   
+        <!--remap from your specific sensors-->         
+
+        <!-- Input: Camera calibration and metadata.  (sensor_msgs/CameraInfo) -->
+        <remap from="camera_info" to="/camera/depth/camera_info"/>
+
+        <!-- Input: Rectified color image. (sensor_msgs/Image) -->
+        <remap from="rgb/image_rect_color" to="/camera/infra1/image_rect_raw"/>
+
+        <!-- Input: Rectified depth image, registered to the RGB camera. (sensor_msgs/Image) -->
+        <remap from="image_rect" to="/camera/depth/image_rect_raw"/>
+
+        <!-- Output: XYZ point cloud. If using PCL, subscribe as PointCloud<PointXYZ>.  (sensor_msgs/PointCloud2)  -->
+        <!-- <remap from="depth_registered/points" to="points"/> -->
+
+    </node>
+
+</launch>

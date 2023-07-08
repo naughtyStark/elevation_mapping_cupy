@@ -35,6 +35,13 @@
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/voxel_grid.h>
+
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/filter.h>
+#include <pcl/pcl_base.h>
+#include <pcl/point_cloud.h>
 
 #include <elevation_map_msgs/CheckSafety.h>
 #include <elevation_map_msgs/Initialize.h>
@@ -69,6 +76,8 @@ class ElevationMappingNode {
   void publishMapToOdom(double error);
   void publishStatistics(const ros::TimerEvent&);
   void publishMapOfIndex(int index);
+  void removePointsOutsideLimits(pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud);
+
 
   visualization_msgs::Marker vectorToArrowMarker(const Eigen::Vector3d& start, const Eigen::Vector3d& end, const int id) const;
   ros::NodeHandle nh_;
