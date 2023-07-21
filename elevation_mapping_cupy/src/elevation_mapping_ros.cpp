@@ -222,8 +222,8 @@ void ElevationMappingNode::removePointsOutsideLimits(pcl::PointCloud<pcl::PointX
   pcl::PassThrough<pcl::PointXYZ> passThroughFilter(true);
   passThroughFilter.setInputCloud(pointCloud);
   passThroughFilter.setFilterFieldName("z");  // TODO(max): Should this be configurable?
-  double relativeLowerThreshold = 0.3;
-  double relativeUpperThreshold = 5.0;
+  double relativeLowerThreshold = 0.15;
+  double relativeUpperThreshold = 8.0;
   passThroughFilter.setFilterLimits(relativeLowerThreshold, relativeUpperThreshold);
   pcl::IndicesPtr insideIndeces(new std::vector<int>);
   passThroughFilter.filter(*insideIndeces);

@@ -5,23 +5,11 @@ import tf
 
 pose_pub = rospy.Publisher("/pose", PoseWithCovarianceStamped, queue_size = 10)
 
-last_z = None
-
 def pose_cb(msg):
-    global last_z
-    if(last_z is None):
-        last_z = msg.pose.position.z
-        return
-    else:
-        z = msg.pose.position.z
-        z = last_z*0.95 + z*0.05
-        last_z = z
-        z = 0
-
     br = tf.TransformBroadcaster()
     pos = msg.pose.position
     rot = msg.pose.orientation
-    br.sendTransform((pos.x, pos.y, z),
+    br.sendTransform((pos.x, pos.y, pos.z),
                      (rot.x, rot.y, rot.z, rot.w),
                      msg.header.stamp,
                      "base_link",
@@ -42,7 +30,6 @@ def pose_cb(msg):
 
     pose = PoseWithCovarianceStamped()
     pose.pose.pose.position = msg.pose.position
-    pose.pose.pose.position.z = z
     pose.pose.pose.orientation = msg.pose.orientation
     pose.header.stamp = msg.header.stamp
     pose.header.frame_id = msg.header.frame_id
