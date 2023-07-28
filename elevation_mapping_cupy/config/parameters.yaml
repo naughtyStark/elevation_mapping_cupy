@@ -1,7 +1,7 @@
 #### Basic parameters ########
 resolution: 0.25                                # resolution in m.
 map_length: 16                                 # map's size in m.
-sensor_noise_factor: 0.5                       # point's noise is sensor_noise_factor*z^2 (z is distance from sensor).
+sensor_noise_factor: 0.1                       # point's noise is sensor_noise_factor*z^2 (z is distance from sensor).
 mahalanobis_thresh: 0.5                         # points outside this distance is outlier.
 outlier_variance: 0.05                          # if point is outlier, add this value to the cell.
 drift_compensation_variance_inler: 0.05         # cells under this value is used for drift compensation.
@@ -46,7 +46,7 @@ corrected_map_frame: 'map'
 
 #### Feature toggles ########
 enable_edge_sharpen: true
-enable_visibility_cleanup: false
+enable_visibility_cleanup: true
 enable_drift_compensation: false
 enable_overlap_clearance: true
 enable_pointcloud_publishing: false
@@ -71,7 +71,7 @@ plugin_config_file: '$(rospack find elevation_mapping_cupy)/config/plugin_config
 #                     '/robot_self_filter/bpearl_front/point_cloud',
 #                     '/robot_self_filter/bpearl_rear/point_cloud'
 #                     ]
-pointcloud_topics: ['/points']
+pointcloud_topics: ['/points','/converted_pc']
 
 #### Publishers ########
 # topic_name:
