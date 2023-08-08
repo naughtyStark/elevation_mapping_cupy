@@ -72,7 +72,7 @@ def map_utils(
             if (d < ${min_valid_distance} * ${min_valid_distance}) {
                 return false;
             }
-            else if (z - sz > dxy * ${ramped_height_range_a} + ${ramped_height_range_c} || z - sz > ${max_height_range}) {
+            else if (fabs(z - sz) > dxy * ${ramped_height_range_a} + ${ramped_height_range_c} || fabs(z - sz) > ${max_height_range}) {
                 return false;
             }
             else {

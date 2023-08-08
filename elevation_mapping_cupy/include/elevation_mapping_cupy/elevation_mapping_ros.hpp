@@ -141,6 +141,8 @@ class ElevationMappingNode {
   bool useInitializerAtStart_;
   double initializeTfGridSize_;
   std::atomic_int pointCloudProcessCounter_;
+
+  float min_depth, max_depth, min_z, max_z, voxel_size;
 };
 
 }  // namespace elevation_mapping_cupy

@@ -60,6 +60,11 @@ ElevationMappingNode::ElevationMappingNode(ros::NodeHandle& nh)
   nh.param<bool>("enable_normal_arrow_publishing", enableNormalArrowPublishing_, false);
   nh.param<bool>("enable_drift_corrected_TF_publishing", enableDriftCorrectedTFPublishing_, false);
   nh.param<bool>("use_initializer_at_start", useInitializerAtStart_, false);
+  nh.param<float>("max_depth", max_depth, 5.0);
+  nh.param<float>("min_depth", min_depth, 0.1);
+  nh.param<float>("max_z", max_z, 0.5);
+  nh.param<float>("min_z", min_z, -0.2);
+  nh.param<float>("voxel_size", voxel_size, 0.25);
 
   enablePointCloudPublishing_ = enablePointCloudPublishing;
 
@@ -67,7 +72,6 @@ ElevationMappingNode::ElevationMappingNode(ros::NodeHandle& nh)
     ros::Subscriber sub = nh_.subscribe(pointcloud_topic, 1, &ElevationMappingNode::pointcloudCallback, this);
     pointcloudSubs_.push_back(sub);
   }
-
   // register map publishers
   for (auto itr = publishers.begin(); itr != publishers.end(); ++itr) {
     // parse params
@@ -224,8 +228,8 @@ void ElevationMappingNode::removePointsOutsideLimits(pcl::PointCloud<pcl::PointX
     pcl::PassThrough<pcl::PointXYZ> passThroughFilter(true);
     passThroughFilter.setInputCloud(pointCloud);
     passThroughFilter.setFilterFieldName("z");  // TODO(max): Should this be configurable?
-    double relativeLowerThreshold = 0.15;
-    double relativeUpperThreshold = 8.0;
+    double relativeLowerThreshold = min_depth;
+    double relativeUpperThreshold = max_depth;
     passThroughFilter.setFilterLimits(relativeLowerThreshold, relativeUpperThreshold);
     pcl::IndicesPtr insideIndeces(new std::vector<int>);
     passThroughFilter.filter(*insideIndeces);
@@ -233,8 +237,8 @@ void ElevationMappingNode::removePointsOutsideLimits(pcl::PointCloud<pcl::PointX
     pcl::PassThrough<pcl::PointXYZ> passThroughFilter_depth(true);
     passThroughFilter_depth.setInputCloud(pointCloud);
     passThroughFilter_depth.setFilterFieldName("y");  // TODO(max): Should this be configurable?
-    double relativeMinThreshold = -1.0f;//parameters.sensorParameters_[""];
-    double relativeMaxThreshold = 2.0f;//parameters.ignorePointsUpperThreshold_;
+    double relativeMinThreshold = min_z;//parameters.sensorParameters_[""];
+    double relativeMaxThreshold = max_z;//parameters.ignorePointsUpperThreshold_;
     passThroughFilter_depth.setFilterLimits(relativeMinThreshold, relativeMaxThreshold);
     pcl::IndicesPtr insideIndeces_depth(new std::vector<int>);
     passThroughFilter_depth.filter(*insideIndeces_depth);
@@ -255,7 +259,7 @@ void ElevationMappingNode::removePointsOutsideLimits(pcl::PointCloud<pcl::PointX
     // Reduce points using VoxelGrid filter.
     pcl::VoxelGrid<pcl::PointXYZ> voxelGridFilter;
     voxelGridFilter.setInputCloud(pointCloud);
-    double filter_size = 0.1;
+    double filter_size = voxel_size;
     voxelGridFilter.setLeafSize(filter_size, filter_size, filter_size);
     voxelGridFilter.filter(tempPointCloud);
     pointCloud->swap(tempPointCloud);

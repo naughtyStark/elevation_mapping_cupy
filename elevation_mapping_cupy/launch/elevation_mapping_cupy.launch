@@ -3,19 +3,33 @@
   <node pkg="elevation_mapping_cupy" type="elevation_mapping_node" name="elevation_mapping" output="screen">
     <rosparam command="load" file="$(find elevation_mapping_cupy)/config/parameters.yaml" />
     <!-- <param name="/use_sim_time" value="true"/> -->
+    <remap from="elevation_mapping/elevation_map_raw" to="elevation_mapping_gpu/elevation_map_raw" />
+    <remap from="elevation_mapping/elevation_map" to="elevation_mapping_gpu/elevation_map" />
+    <remap from="elevation_mapping/visibility_cleanup_map" to="elevation_mapping_gpu/visibility_cleanup_map" />
   </node>
 
   <include file="$(find elevation_mapping_cupy)/launch/depth_to_pcl.launch"/>
-  <node pkg="elevation_mapping_demos" type="pose_to_tf.py" name = "transformer" output = "screen"/>
+  <!-- <node pkg="elevation_mapping_demos" type="pose_to_tf.py" name = "transformer" output = "screen"/> -->
 
   <node pkg="grid_map_occlusion_inpainting_ros" type="node" name="grid_map_occlusion_inpainting" output="screen" launch-prefix="">
       <rosparam file="$(find grid_map_occlusion_inpainting_ros)/config/default.yaml" />
+      <remap from="elevation_mapping/elevation_map_raw" to="elevation_mapping_gpu/elevation_map_raw" />
+      <remap from="/grid_map_occlusion_inpainting/all_grid_map" to="/grid_map_occlusion_inpainting_test/all_grid_map" />
+      <remap from="/grid_map_occlusion_inpainting/comp_grid_map" to="/grid_map_occlusion_inpainting_test/comp_grid_map" />
+      <remap from="/grid_map_occlusion_inpainting/occ_grid_map" to="/grid_map_occlusion_inpainting_test/occ_grid_map" />
+      <remap from="/grid_map_occlusion_inpainting/rec_grid_map" to="/grid_map_occlusion_inpainting_test/rec_grid_map" />
+      <remap from="/grid_map_visualization/comp_occupancy_grid" to="/grid_map_visualization_test/comp_occupancy_grid" />
+      <remap from="/grid_map_visualization/comp_points" to="/grid_map_visualization_test/comp_points" />
+      <remap from="/grid_map_visualization/occ_occupancy_grid" to="/grid_map_visualization_test/occ_occupancy_grid" />
+      <remap from="/grid_map_visualization/occ_points" to="/grid_map_visualization_test/occ_points" />
+      <remap from="/grid_map_visualization/rec_occupancy_grid" to="/grid_map_visualization_test/rec_occupancy_grid" />
+      <remap from="/grid_map_visualization/rec_points" to="/grid_map_visualization_test/rec_points" />
   </node>
 
-  <node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen">
+<!--   <node pkg="grid_map_visualization" type="grid_map_visualization" name="grid_map_visualization" output="screen">
     <rosparam command="load" file="$(find grid_map_occlusion_inpainting_ros)/config/viz.yaml" />
-  </node>
-  <node name="rviz" pkg="rviz" type="rviz"  args="-d $(find grid_map_occlusion_inpainting_ros)/rviz/occlusion_inpainting.rviz"/>
+  </node> -->
+  <!-- <node name="rviz" pkg="rviz" type="rviz"  args="-d $(find grid_map_occlusion_inpainting_ros)/rviz/occlusion_inpainting.rviz"/> -->
 
   
 </launch>
