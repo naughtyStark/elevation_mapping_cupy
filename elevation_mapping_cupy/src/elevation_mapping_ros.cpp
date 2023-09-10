@@ -65,6 +65,11 @@ ElevationMappingNode::ElevationMappingNode(ros::NodeHandle& nh)
   nh.param<float>("max_z", max_z, 0.5);
   nh.param<float>("min_z", min_z, -0.2);
   nh.param<float>("voxel_size", voxel_size, 0.25);
+  nh.param<float>("outlier_factor", outlier_factor, 2);
+  nh.param<float>("min_nbrs", min_nbrs, 2);
+  nh.param<float>("voxel_samples", voxel_samples, 10);
+  nh.param<float>("time_lag", time_lag, 0.001);
+
 
   enablePointCloudPublishing_ = enablePointCloudPublishing;
 
@@ -225,6 +230,7 @@ void ElevationMappingNode::removePointsOutsideLimits(pcl::PointCloud<pcl::PointX
 {
   if((int)pointCloud->size() > 1000) // don't filter unless we have more than 1000 points.
   {
+    pcl::PointCloud<pcl::PointXYZ> tempPointCloud_height, tempPointCloud_depth, tempPointCloud_voxel, tempPointCloud_NN;
     pcl::PassThrough<pcl::PointXYZ> passThroughFilter(true);
     passThroughFilter.setInputCloud(pointCloud);
     passThroughFilter.setFilterFieldName("z");  // TODO(max): Should this be configurable?
@@ -246,23 +252,29 @@ void ElevationMappingNode::removePointsOutsideLimits(pcl::PointCloud<pcl::PointX
     pcl::ExtractIndices<pcl::PointXYZ> extractIndicesFilter, extractIndicesFilter_depth;
     extractIndicesFilter.setInputCloud(pointCloud);
     extractIndicesFilter.setIndices(insideIndeces);
-    pcl::PointCloud<pcl::PointXYZ> tempPointCloud;
-    extractIndicesFilter.filter(tempPointCloud);
-    pointCloud->swap(tempPointCloud);
+    extractIndicesFilter.filter(tempPointCloud_height);
+    pointCloud->swap(tempPointCloud_height);
 
     extractIndicesFilter_depth.setInputCloud(pointCloud);
     extractIndicesFilter_depth.setIndices(insideIndeces);
-    pcl::PointCloud<pcl::PointXYZ> tempPointCloud_depth;
     extractIndicesFilter_depth.filter(tempPointCloud_depth);
     pointCloud->swap(tempPointCloud_depth);
 
     // Reduce points using VoxelGrid filter.
     pcl::VoxelGrid<pcl::PointXYZ> voxelGridFilter;
     voxelGridFilter.setInputCloud(pointCloud);
-    double filter_size = voxel_size;
-    voxelGridFilter.setLeafSize(filter_size, filter_size, filter_size);
-    voxelGridFilter.filter(tempPointCloud);
-    pointCloud->swap(tempPointCloud);
+    voxelGridFilter.setLeafSize(double(voxel_size), double(voxel_size), double(voxel_size));
+    voxelGridFilter.setMinimumPointsNumberPerVoxel(voxel_samples);
+    voxelGridFilter.filter(tempPointCloud_voxel);
+    pointCloud->swap(tempPointCloud_voxel);
+    
+    pcl::RadiusOutlierRemoval<pcl::PointXYZ> outrem;
+    outrem.setInputCloud(pointCloud);
+    outrem.setRadiusSearch(outlier_factor*voxel_size); 
+    outrem.setMinNeighborsInRadius (min_nbrs);
+    outrem.filter(tempPointCloud_NN);
+    pointCloud->swap(tempPointCloud_NN);
+
   }
   // ROS_INFO("removePointsOutsideLimits() reduced point cloud to %i points.", (int)pointCloud->size());
 }
@@ -280,7 +292,7 @@ void ElevationMappingNode::pointcloudCallback(const sensor_msgs::PointCloud2& cl
 
   tf::StampedTransform transformTf;
   std::string sensorFrameId = cloud.header.frame_id;
-  auto timeStamp = cloud.header.stamp;
+  auto timeStamp = cloud.header.stamp - ros::Duration(time_lag);
   Eigen::Affine3d transformationSensorToMap;
   try {
     transformListener_.waitForTransform(mapFrameId_, sensorFrameId, timeStamp, ros::Duration(1.0));

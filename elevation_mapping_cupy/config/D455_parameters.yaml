@@ -1,6 +1,6 @@
 #### Basic parameters ########
 resolution: 0.25                                # resolution in m.
-map_length: 64                             # map's size in m.
+map_length: 64                              # map's size in m.
 sensor_noise_factor: 0.1                       # point's noise is sensor_noise_factor*z^2 (z is distance from sensor).
 mahalanobis_thresh: 0.5                         # points outside this distance is outlier.
 outlier_variance: 0.05                          # if point is outlier, add this value to the cell.
@@ -31,7 +31,7 @@ publish_statistics_fps: 1.0                     # Publish statistics topic in th
 
 max_ray_length: 40.0                            # maximum length for ray tracing.
 cleanup_step: 0.1                               # subtitute this value from validity layer at visibiltiy cleanup.
-cleanup_cos_thresh: 0.5                         # subtitute this value from validity layer at visibiltiy cleanup.
+cleanup_cos_thresh: 0.5                        # subtitute this value from validity layer at visibiltiy cleanup.
 
 safe_thresh: 0.7                                # if traversability is smaller, it is counted as unsafe cell.
 safe_min_thresh: 0.4                            # polygon is unsafe if there exists lower traversability than this.

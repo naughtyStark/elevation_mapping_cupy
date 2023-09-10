@@ -39,6 +39,7 @@
 #include <pcl/filters/voxel_grid.h>
 
 #include <pcl/filters/extract_indices.h>
+#include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/filter.h>
 #include <pcl/pcl_base.h>
 #include <pcl/point_cloud.h>
@@ -142,7 +143,7 @@ class ElevationMappingNode {
   double initializeTfGridSize_;
   std::atomic_int pointCloudProcessCounter_;
 
-  float min_depth, max_depth, min_z, max_z, voxel_size;
+  float min_depth, max_depth, min_z, max_z, voxel_size, min_nbrs, outlier_factor, voxel_samples, time_lag;
 };
 
 }  // namespace elevation_mapping_cupy

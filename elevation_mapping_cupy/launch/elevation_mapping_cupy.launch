@@ -10,10 +10,15 @@
 
   <include file="$(find elevation_mapping_cupy)/launch/depth_to_pcl.launch"/>
   <!-- <node pkg="elevation_mapping_demos" type="pose_to_tf.py" name = "transformer" output = "screen"/> -->
+  <node pkg="hound_core" type="map_cropper.py" name = "cropper" output = "screen">
+    <!-- default topic names are set up for normal operations -->
+    <remap from="elevation_mapping/elevation_map_raw" to="elevation_mapping_gpu/elevation_map_raw" />
+    <remap from="elevation_mapping/elevation_map_cropped" to="elevation_mapping_gpu/elevation_map_cropped" />
+  </node>
 
   <node pkg="grid_map_occlusion_inpainting_ros" type="node" name="grid_map_occlusion_inpainting" output="screen" launch-prefix="">
       <rosparam file="$(find grid_map_occlusion_inpainting_ros)/config/default.yaml" />
-      <remap from="elevation_mapping/elevation_map_raw" to="elevation_mapping_gpu/elevation_map_raw" />
+      <remap from="elevation_mapping/elevation_map_raw" to="elevation_mapping_gpu/elevation_map_cropped" />
       <remap from="/grid_map_occlusion_inpainting/all_grid_map" to="/grid_map_occlusion_inpainting_test/all_grid_map" />
       <remap from="/grid_map_occlusion_inpainting/comp_grid_map" to="/grid_map_occlusion_inpainting_test/comp_grid_map" />
       <remap from="/grid_map_occlusion_inpainting/occ_grid_map" to="/grid_map_occlusion_inpainting_test/occ_grid_map" />
