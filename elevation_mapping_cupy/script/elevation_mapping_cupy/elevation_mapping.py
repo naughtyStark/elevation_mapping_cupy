@@ -28,6 +28,10 @@ from .traversability_polygon import (
 
 import cupy as cp
 
+import cv2
+import time
+
+
 xp = cp
 pool = cp.cuda.MemoryPool(cp.cuda.malloc_managed)
 cp.cuda.set_allocator(pool.malloc)
@@ -324,16 +328,31 @@ class ElevationMap(object):
                 dilated_map, self.elevation_map[2], self.normal_map, size=(self.cell_n * self.cell_n)
             )
 
-    def process_map_for_publish(self, input_map, fill_nan=False, add_z=False, xp=cp):
+    def process_map_for_publish(self, input_map, fill_nan=False, add_z=False, xp=cp, inpainting=False):
         m = input_map.copy()
         if fill_nan:
             m = xp.where(self.elevation_map[2] > 0.5, m, xp.nan)
         if add_z:
             m = m + self.center[2]
+        
+        # print(type(m))
+            
+        if False:
+            m = cp.asnumpy(m)
+            nan_mask = np.isnan(m).astype('uint8')
+            m = np.nan_to_num(m, nan=0).astype('float32') * 255.0  # Convert NaN to 0 for now
+            m = cv2.inpaint(m, nan_mask, inpaintRadius=3, flags=cv2.INPAINT_TELEA)
+            # print(m.dtype)
+            
+            m = m / 255.0
+
+        # m = cp.asarray(m)
+
+        # print(m.shape)
         return m[1:-1, 1:-1]
 
     def get_elevation(self):
-        return self.process_map_for_publish(self.elevation_map[0], fill_nan=True, add_z=True)
+        return self.process_map_for_publish(self.elevation_map[0], fill_nan=True, add_z=True, inpainting=True)
 
     def get_variance(self):
         return self.process_map_for_publish(self.elevation_map[1], fill_nan=False, add_z=False)

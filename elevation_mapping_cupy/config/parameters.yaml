@@ -1,6 +1,6 @@
 #### Basic parameters ########
-resolution: 0.25                                # resolution in m.
-map_length: 64                             # map's size in m.
+resolution: 0.1                                # resolution in m.
+map_length: 16.1                             # map's size in m.
 sensor_noise_factor: 0.1                       # point's noise is sensor_noise_factor*z^2 (z is distance from sensor).
 mahalanobis_thresh: 0.5                         # points outside this distance is outlier.
 outlier_variance: 0.05                          # if point is outlier, add this value to the cell.

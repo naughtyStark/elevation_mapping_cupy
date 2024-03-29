@@ -17,6 +17,8 @@
 #include <pcl/common/projection_matrix.h>
 
 #include <elevation_map_msgs/Statistics.h>
+#include <chrono>
+
 
 namespace elevation_mapping_cupy {
 
@@ -282,6 +284,7 @@ void ElevationMappingNode::removePointsOutsideLimits(pcl::PointCloud<pcl::PointX
 
 void ElevationMappingNode::pointcloudCallback(const sensor_msgs::PointCloud2& cloud) {
   auto start = ros::Time::now();
+  auto start_wall = std::chrono::system_clock::now();
   pcl::PCLPointCloud2 pcl_pc;
   pcl_conversions::toPCL(cloud, pcl_pc);
 
@@ -319,6 +322,14 @@ void ElevationMappingNode::pointcloudCallback(const sensor_msgs::PointCloud2& cl
 
   ROS_DEBUG_THROTTLE(1.0, "ElevationMap processed a point cloud (%i points) in %f sec.", static_cast<int>(pointCloud->size()),
                      (ros::Time::now() - start).toSec());
+  
+  // auto end = std::chrono::system_clock::now();
+  // std::chrono::duration<double> elapsed_seconds = end - start_wall;
+
+  // ROS_ERROR_THROTTLE(1.0, "ElevationMap : %f", elapsed_seconds.count() * 1000);
+
+  ROS_ERROR_THROTTLE(1.0, "ElevationMap : %f ", (ros::Time::now() - start).toSec() * 1000);
+
   ROS_DEBUG_THROTTLE(1.0, "positionError: %f ", positionError);
   ROS_DEBUG_THROTTLE(1.0, "orientationError: %f ", orientationError);
   // This is used for publishing as statistics.
