@@ -5,9 +5,9 @@
   </node>
   <node pkg="hound_core" type="map_cropper.py" name = "cropper" output = "screen"/>
   <include file="$(find elevation_mapping_cupy)/launch/depth_to_pcl.launch"/>
-<!--   <node pkg="grid_map_occlusion_inpainting_ros" type="node" name="grid_map_occlusion_inpainting" output="screen" launch-prefix="">
+  <node pkg="grid_map_occlusion_inpainting_ros" type="node" name="grid_map_occlusion_inpainting" output="screen" launch-prefix="">
       <rosparam file="$(find grid_map_occlusion_inpainting_ros)/config/default.yaml" />
       <remap from="elevation_mapping/elevation_map_raw" to="elevation_mapping/elevation_map_cropped" />
-  </node> -->
+  </node>
   
 </launch>

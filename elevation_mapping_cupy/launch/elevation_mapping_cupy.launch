@@ -14,6 +14,7 @@
     <!-- default topic names are set up for normal operations -->
     <remap from="elevation_mapping/elevation_map_raw" to="elevation_mapping_gpu/elevation_map_raw" />
     <remap from="elevation_mapping/elevation_map_cropped" to="elevation_mapping_gpu/elevation_map_cropped" />
+    <remap from="/grid_map_occlusion_inpainting/all_grid_map" to="/grid_map_occlusion_inpainting/all_grid_map_test" />
   </node>
 
 <!--   <node pkg="grid_map_occlusion_inpainting_ros" type="node" name="grid_map_occlusion_inpainting" output="screen" launch-prefix="">
